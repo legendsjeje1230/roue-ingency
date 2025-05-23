@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Roue de la Fortune - WIN automatique avec WinStream</title>
+  <title>Roue de la Fortune - WIN automatique</title>
   <style>
     body {
       display: flex;
@@ -58,16 +58,6 @@
       font-weight: bold;
       color: #333;
     }
-    #win {
-      margin-top: 15px;
-      font-size: 24px;
-      color: orange;
-      background: black;
-      font-family: 'Lilita One', cursive;
-      padding: 5px 15px;
-      border-radius: 8px;
-      user-select: none;
-    }
   </style>
 </head>
 <body>
@@ -80,7 +70,7 @@
   </div>
   <div id="result"></div>
 
-  <h1 id="win">WIN : 0 / 10</h1>
+  <h1 id="win" style="background: black; font-family: 'Lilita One', cursive;">WIN : 0 / 10</h1>
 
   <audio id="win-sound" src="victory_6.mp3"></audio>
   <audio id="lose-sound" src="fail-trombone-03.mp3"></audio>
@@ -90,14 +80,11 @@
     const ctx = canvas.getContext('2d');
     const segments = 6;
     const colors = ['green', 'red', 'green', 'red', 'green', 'red'];
-    const labels = ['+1 WIN', '-2 WIN', '+3 WIN', '-1 WIN', '+2 WIN', '-3 WIN'];
+    const labels = ['+1 WIN', '-1 WIN', '+2 WIN', '-2 WIN', '+3 WIN', '-3 WIN'];
     let currentRotation = 0;
 
     const winSound = document.getElementById('win-sound');
     const loseSound = document.getElementById('lose-sound');
-
-    // Ton token WinStream
-    const token = 'thomaslebrun95_IngencyLive_CZEf4CNddHoIHGMzOCAc8SuDfvGazV';
 
     function drawWheel(rotation = 0) {
       const radius = canvas.width / 2;
@@ -146,42 +133,24 @@
     }
 
     function updateWinCounter(change) {
-  const winElement = document.getElementById('win');
-  if (!winElement) return;
+      const winElement = document.getElementById('win');
+      if (!winElement) return;
 
-  const currentText = winElement.textContent;
-  const matches = currentText.match(/WIN : (-?\d+) \/ 10/); // Accepte aussi les nombres négatifs
-  if (!matches) return;
+      const currentText = winElement.textContent;
+      const matches = currentText.match(/WIN : (-?\d+) \/ 10/);
+      if (!matches) return;
 
-  let currentWins = parseInt(matches[1], 10);
-  currentWins += change;
+      let currentWins = parseInt(matches[1], 10);
+      currentWins += change;
 
-  // Pas de limite basse, uniquement limite haute
-  if (currentWins > 10) currentWins = 10;
+      winElement.textContent = `WIN : ${currentWins} / 10`;
 
-  winElement.textContent = `WIN : ${currentWins} / 10`;
-}
-    
-    async function updateWinStream(change) {
-      // Détermine l’URL selon la valeur (positive ou négative)
-      let url = '';
-      const absChange = Math.abs(change);
-
-      if (change > 0) {
-        url = `https://winstream.fr/addwinv2.php?win=${absChange}&token=${token}`;
-      } else if (change < 0) {
-        url = `https://winstream.fr/removewinv2.php?win=${absChange}&token=${token}`;
+      if (currentWins > 0) {
+        winElement.style.color = 'limegreen';
+      } else if (currentWins < 0) {
+        winElement.style.color = 'red';
       } else {
-        return; // Pas de changement
-      }
-
-      try {
-        const response = await fetch(url, { mode: 'cors' });
-        if (!response.ok) {
-          console.error('Erreur API WinStream:', response.status, response.statusText);
-        }
-      } catch (error) {
-        console.error('Erreur fetch WinStream:', error);
+        winElement.style.color = 'black';
       }
     }
 
@@ -205,7 +174,6 @@
 
           const change = parseInt(resultText.split(" ")[0], 10);
           updateWinCounter(change);
-          updateWinStream(change);
         }
       }
 
