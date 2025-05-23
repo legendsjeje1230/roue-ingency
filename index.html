@@ -156,7 +156,7 @@
     drawWheel();
 
     // WebSocket connection to listen for spin trigger
-    const socket = new WebSocket('ws://192.168.1.124:3000');
+    const socket = new WebSocket('ws://localhost:3000');
 
     socket.onopen = () => {
       console.log('WebSocket connecté au serveur');
