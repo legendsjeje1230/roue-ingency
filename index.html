@@ -146,22 +146,21 @@
     }
 
     function updateWinCounter(change) {
-      const winElement = document.getElementById('win');
-      if (!winElement) return;
+  const winElement = document.getElementById('win');
+  if (!winElement) return;
 
-      const currentText = winElement.textContent;
-      const matches = currentText.match(/WIN : (\d+) \/ 10/);
-      if (!matches) return;
+  const currentText = winElement.textContent;
+  const matches = currentText.match(/WIN : (-?\d+) \/ 10/); // Accepte aussi les nombres négatifs
+  if (!matches) return;
 
-      let currentWins = parseInt(matches[1], 10);
-      currentWins += change;
+  let currentWins = parseInt(matches[1], 10);
+  currentWins += change;
 
-      if (currentWins < 0) currentWins = 0;
-      if (currentWins > 10) currentWins = 10;
+  // Pas de limite basse, uniquement limite haute
+  if (currentWins > 10) currentWins = 10;
 
-      winElement.textContent = `WIN : ${currentWins} / 10`;
-    }
-
+  winElement.textContent = `WIN : ${currentWins} / 10`;
+}
     async function updateWinStream(change) {
       // Détermine l’URL selon la valeur (positive ou négative)
       let url = '';
