@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Roue de la Fortune - WIN automatique</title>
+  <title>Roue de la Fortune - WIN écrit, sons réels</title>
   <style>
     body {
       display: flex;
@@ -58,6 +58,16 @@
       font-weight: bold;
       color: #333;
     }
+    #win {
+      margin-top: 15px;
+      font-size: 28px;
+      font-weight: bold;
+      color: orange;
+      background: black;
+      font-family: 'Lilita One', cursive;
+      padding: 5px 15px;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body>
@@ -69,8 +79,7 @@
     <button onclick="spin()">Tourner la roue</button>
   </div>
   <div id="result"></div>
-
-  <h1 id="win" style="color: orange; background: black; font-family: 'Lilita One', cursive;">WIN : 0 / 10</h1>
+  <h1 id="win">WIN : 0 / 10</h1>
 
   <audio id="win-sound" src="victory_6.mp3"></audio>
   <audio id="lose-sound" src="fail-trombone-03.mp3"></audio>
@@ -85,6 +94,9 @@
 
     const winSound = document.getElementById('win-sound');
     const loseSound = document.getElementById('lose-sound');
+
+    let currentWinCount = 0;
+    const maxWin = 10;
 
     function drawWheel(rotation = 0) {
       const radius = canvas.width / 2;
@@ -121,7 +133,9 @@
       const normalized = (360 - degrees + 360) % 360;
       const segmentSize = 360 / segments;
       const index = Math.floor(normalized / segmentSize) % segments;
-      const value = labels[index].split(" ")[0];
+      
+      const valueStr = labels[index].split(" ")[0]; // ex: "+1" or "-2"
+      const value = parseInt(valueStr, 10);
 
       if (colors[index] === 'green') {
         winSound.play();
@@ -129,24 +143,14 @@
         loseSound.play();
       }
 
-      return `${value} - WIN 🎉`;
+      return value;
     }
 
-    function updateWinCounter(change) {
-      const winElement = document.getElementById('win');
-      if (!winElement) return;
-
-      const currentText = winElement.textContent;
-      const matches = currentText.match(/WIN : (\d+) \/ 10/);
-      if (!matches) return;
-
-      let currentWins = parseInt(matches[1], 10);
-      currentWins += change;
-
-      if (currentWins < 0) currentWins = 0;
-      if (currentWins > 10) currentWins = 10;
-
-      winElement.textContent = `WIN : ${currentWins} / 10`;
+    function updateWinCount(value) {
+      currentWinCount += value;
+      if (currentWinCount < 0) currentWinCount = 0;
+      if (currentWinCount > maxWin) currentWinCount = maxWin;
+      document.getElementById('win').textContent = `WIN : ${currentWinCount} / ${maxWin}`;
     }
 
     function spin() {
@@ -164,11 +168,9 @@
         if (t < 1) {
           requestAnimationFrame(animate);
         } else {
-          const resultText = getResult(currentRotation);
-          resultDiv.textContent = resultText;
-
-          const change = parseInt(resultText.split(" ")[0], 10);
-          updateWinCounter(change);
+          const resultValue = getResult(currentRotation);
+          updateWinCount(resultValue);
+          resultDiv.textContent = `${resultValue} - WIN 🎉`;
         }
       }
 
