@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Roue de la Fortune - WIN écrit, sons réels</title>
+  <title>Roue de la Fortune - WIN automatique</title>
   <style>
     body {
       display: flex;
@@ -70,6 +70,8 @@
   </div>
   <div id="result"></div>
 
+  <h1 id="win" style="color: orange; background: black; font-family: 'Lilita One', cursive;">WIN : 0 / 10</h1>
+
   <audio id="win-sound" src="victory_6.mp3"></audio>
   <audio id="lose-sound" src="fail-trombone-03.mp3"></audio>
 
@@ -130,9 +132,26 @@
       return `${value} - WIN 🎉`;
     }
 
+    function updateWinCounter(change) {
+      const winElement = document.getElementById('win');
+      if (!winElement) return;
+
+      const currentText = winElement.textContent;
+      const matches = currentText.match(/WIN : (\d+) \/ 10/);
+      if (!matches) return;
+
+      let currentWins = parseInt(matches[1], 10);
+      currentWins += change;
+
+      if (currentWins < 0) currentWins = 0;
+      if (currentWins > 10) currentWins = 10;
+
+      winElement.textContent = `WIN : ${currentWins} / 10`;
+    }
+
     function spin() {
       const spinAngle = Math.random() * Math.PI * 6 + Math.PI * 2;
-      const duration = 8000;
+      const duration = 3000;
       const startTime = performance.now();
       const resultDiv = document.getElementById('result');
 
@@ -147,6 +166,9 @@
         } else {
           const resultText = getResult(currentRotation);
           resultDiv.textContent = resultText;
+
+          const change = parseInt(resultText.split(" ")[0], 10);
+          updateWinCounter(change);
         }
       }
 
