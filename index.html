@@ -132,14 +132,14 @@
 
     function spin() {
       const spinAngle = Math.random() * Math.PI * 6 + Math.PI * 2;
-      const duration = 1500;
+      const duration = 3000;
       const startTime = performance.now();
       const resultDiv = document.getElementById('result');
 
       function animate(time) {
         const elapsed = time - startTime;
         const t = Math.min(elapsed / duration, 1);
-        const easeOut = 1 - Math.pow(1 - t, 5);
+        const easeOut = 1 - Math.pow(1 - t, 3);
         currentRotation = spinAngle * easeOut;
         drawWheel(currentRotation);
         if (t < 1) {
