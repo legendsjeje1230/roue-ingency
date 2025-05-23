@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Roue de la Fortune - WIN automatique</title>
+  <title>Roue de la Fortune - WIN automatique avec WinStream</title>
   <style>
     body {
       display: flex;
@@ -58,6 +58,16 @@
       font-weight: bold;
       color: #333;
     }
+    #win {
+      margin-top: 15px;
+      font-size: 24px;
+      color: orange;
+      background: black;
+      font-family: 'Lilita One', cursive;
+      padding: 5px 15px;
+      border-radius: 8px;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
@@ -70,7 +80,7 @@
   </div>
   <div id="result"></div>
 
-  <h1 id="win" style="color: orange; background: black; font-family: 'Lilita One', cursive;">WIN : 0 / 10</h1>
+  <h1 id="win">WIN : 0 / 10</h1>
 
   <audio id="win-sound" src="victory_6.mp3"></audio>
   <audio id="lose-sound" src="fail-trombone-03.mp3"></audio>
@@ -85,6 +95,9 @@
 
     const winSound = document.getElementById('win-sound');
     const loseSound = document.getElementById('lose-sound');
+
+    // Ton token WinStream
+    const token = 'thomaslebrun95_IngencyLive_CZEf4CNddHoIHGMzOCAc8SuDfvGazV';
 
     function drawWheel(rotation = 0) {
       const radius = canvas.width / 2;
@@ -122,7 +135,6 @@
       const segmentSize = 360 / segments;
       const index = Math.floor(normalized / segmentSize) % segments;
       const value = labels[index].split(" ")[0];
-      const intValue = parseInt(value, 10);
 
       if (colors[index] === 'green') {
         winSound.play();
@@ -130,33 +142,7 @@
         loseSound.play();
       }
 
-      return intValue;
-    }
-
-    function updateWinStream(winChange) {
-      const token = 'thomaslebrun95_IngencyLive_CZEf4CNddHoIHGMzOCAc8SuDfvGazV';
-      const absWin = Math.abs(winChange);
-      let url = '';
-
-      if (winChange > 0) {
-        url = `https://winstream.fr/addwinv2.php?win=${absWin}&token=${token}`;
-      } else if (winChange < 0) {
-        url = `https://winstream.fr/removewinv2.php?win=${absWin}&token=${token}`;
-      } else {
-        return;
-      }
-
-      fetch(url)
-        .then(response => {
-          if(response.ok) {
-            console.log('WinStream mis à jour avec:', winChange);
-          } else {
-            console.error('Erreur mise à jour WinStream:', response.statusText);
-          }
-        })
-        .catch(error => {
-          console.error('Erreur fetch WinStream:', error);
-        });
+      return `${value} - WIN 🎉`;
     }
 
     function updateWinCounter(change) {
@@ -174,8 +160,29 @@
       if (currentWins > 10) currentWins = 10;
 
       winElement.textContent = `WIN : ${currentWins} / 10`;
+    }
 
-      updateWinStream(change);
+    async function updateWinStream(change) {
+      // Détermine l’URL selon la valeur (positive ou négative)
+      let url = '';
+      const absChange = Math.abs(change);
+
+      if (change > 0) {
+        url = `https://winstream.fr/addwinv2.php?win=${absChange}&token=${token}`;
+      } else if (change < 0) {
+        url = `https://winstream.fr/removewinv2.php?win=${absChange}&token=${token}`;
+      } else {
+        return; // Pas de changement
+      }
+
+      try {
+        const response = await fetch(url, { mode: 'cors' });
+        if (!response.ok) {
+          console.error('Erreur API WinStream:', response.status, response.statusText);
+        }
+      } catch (error) {
+        console.error('Erreur fetch WinStream:', error);
+      }
     }
 
     function spin() {
@@ -193,9 +200,12 @@
         if (t < 1) {
           requestAnimationFrame(animate);
         } else {
-          const resultValue = getResult(currentRotation);
-          resultDiv.textContent = `${resultValue} - WIN 🎉`;
-          updateWinCounter(resultValue);
+          const resultText = getResult(currentRotation);
+          resultDiv.textContent = resultText;
+
+          const change = parseInt(resultText.split(" ")[0], 10);
+          updateWinCounter(change);
+          updateWinStream(change);
         }
       }
 
@@ -204,6 +214,7 @@
 
     drawWheel();
 
+    // WebSocket connection to listen for spin trigger
     const socket = new WebSocket('ws://localhost:3000');
 
     socket.onopen = () => {
