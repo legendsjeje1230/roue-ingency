@@ -5,29 +5,47 @@
   <title>Roue de la Fortune - WIN automatique</title>
   <style>
     body {
+      margin: 0;
+      padding: 10px 0;
+      background: #f0f0f0;
+      font-family: Arial, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: start;
-      padding-top: 20px;
-      height: 100vh;
-      background: #f0f0f0;
-      font-family: Arial, sans-serif;
+      height: auto;
+      min-height: 100vh;
     }
+
     .logo {
       max-width: 180px;
-      margin-bottom: 10px;
+      margin: 0 0 10px 0;
     }
+
     h1 {
-      font-size: 28px;
+      font-size: 24px;
+      margin: 5px 0 15px 0;
       color: #003366;
-      margin-bottom: 20px;
     }
+
     canvas {
       border: 5px solid #333;
       border-radius: 50%;
       background: white;
+      display: block;
+      margin-bottom: 10px;
     }
+
+    #win {
+      margin-top: 10px;
+      font-size: 22px;
+      background: black;
+      color: orange;
+      padding: 5px 15px;
+      border-radius: 6px;
+      font-family: 'Lilita One', cursive;
+    }
+
     .pointer {
       width: 0;
       height: 0;
@@ -36,6 +54,7 @@
       border-bottom: 30px solid black;
       margin-bottom: -20px;
     }
+
     .button-container {
       margin-top: 20px;
       border: 3px solid #007BFF;
@@ -43,6 +62,7 @@
       padding: 15px 30px;
       border-radius: 10px;
     }
+
     button {
       font-size: 16px;
       padding: 10px 20px;
@@ -52,21 +72,12 @@
       border: none;
       border-radius: 5px;
     }
+
     #result {
       margin-top: 15px;
       font-size: 20px;
       font-weight: bold;
       color: #333;
-    }
-    #win {
-      margin-top: 15px;
-      font-size: 24px;
-      font-weight: bold;
-      color: orange;
-      background: black;
-      padding: 5px 15px;
-      font-family: 'Lilita One', cursive;
-      border-radius: 5px;
     }
   </style>
 </head>
@@ -153,16 +164,18 @@
       let currentWins = parseInt(matches[1], 10);
       currentWins += change;
 
+      // Si tu veux enlever la limite basse, commente les deux lignes ci-dessous
+      if (currentWins < 0) currentWins = 0;
       if (currentWins > 10) currentWins = 10;
 
-      // Change color selon valeur
+      winElement.textContent = `WIN : ${currentWins} / 10`;
+
+      // Mettre couleur selon positif/négatif
       if (currentWins < 0) {
         winElement.style.color = 'red';
       } else {
         winElement.style.color = 'limegreen';
       }
-
-      winElement.textContent = `WIN : ${currentWins} / 10`;
     }
 
     function spin() {
@@ -185,9 +198,6 @@
 
           const change = parseInt(resultText.split(" ")[0], 10);
           updateWinCounter(change);
-
-          // Envoie la valeur au serveur via WebSocket
-          socket.send(JSON.stringify({ type: 'winUpdate', value: change }));
         }
       }
 
