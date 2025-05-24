@@ -14,12 +14,18 @@
       background: #f0f0f0;
       font-family: Arial, sans-serif;
     }
+    #main-content {
+      display: none; /* caché par défaut */
+      align-items: center;
+    }
     .logo {
       max-width: 180px;
       margin-bottom: 10px;
     }
-    #wheel-container {
-      display: none; /* Caché au départ */
+    h1 {
+      font-size: 28px;
+      color: #003366;
+      margin-bottom: 20px;
     }
     canvas {
       border: 5px solid #333;
@@ -33,22 +39,6 @@
       border-right: 20px solid transparent;
       border-bottom: 30px solid black;
       margin-bottom: -20px;
-    }
-    .button-container {
-      margin-top: 20px;
-      border: 3px solid #007BFF;
-      background-color: #E3F2FD;
-      padding: 15px 30px;
-      border-radius: 10px;
-    }
-    button {
-      font-size: 16px;
-      padding: 10px 20px;
-      cursor: pointer;
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 5px;
     }
     #result {
       margin-top: 15px;
@@ -72,24 +62,23 @@
   </style>
 </head>
 <body>
-  <img src="logo.png" alt="Logo Ingency Live" class="logo" />
-  <h1>🎯 Roue de la Fortune 🎯</h1>
-
-  <div id="wheel-container">
+  <div id="main-content">
+    <img src="logo.png" alt="Logo Ingency Live" class="logo" />
+    <h1>🎯 Roue de la Fortune 🎯</h1>
     <div class="pointer"></div>
     <canvas id="wheel" width="300" height="300"></canvas>
     <div class="button-container">
       <button onclick="spin()">Tourner la roue</button>
     </div>
     <div id="result"></div>
+    <h1 id="win" class="positive">WIN : 0 / 10</h1>
   </div>
-
-  <h1 id="win" class="positive">WIN : 0 / 10</h1>
 
   <audio id="win-sound" src="victory_6.mp3"></audio>
   <audio id="lose-sound" src="fail-trombone-03.mp3"></audio>
 
   <script>
+    const mainContent = document.getElementById('main-content');
     const canvas = document.getElementById('wheel');
     const ctx = canvas.getContext('2d');
     const segments = 6;
@@ -97,32 +86,20 @@
     const labels = ['+1 WIN', '-1 WIN', '+2 WIN', '-2 WIN', '+3 WIN', '-3 WIN'];
     let currentRotation = 0;
 
-    const wheelContainer = document.getElementById('wheel-container');
+    const winSound = document.getElementById('win-sound');
+    const loseSound = document.getElementById('lose-sound');
 
-    // Connexion WebSocket au serveur local
     const socket = new WebSocket('ws://localhost:3000');
 
-    socket.onopen = () => {
-      console.log('Connexion WebSocket ouverte');
-    };
+    socket.onopen = () => console.log('WebSocket connecté');
+    socket.onerror = err => console.error('WebSocket erreur:', err);
+    socket.onclose = () => console.log('WebSocket fermé');
 
-    socket.onmessage = (event) => {
-      console.log('Message reçu du serveur :', event.data);
-
+    socket.onmessage = event => {
       if(event.data === 'spin') {
-        // Affiche la roue
-        wheelContainer.style.display = 'block';
-        // Lance la rotation automatique
+        mainContent.style.display = 'flex';
         spin();
       }
-    };
-
-    socket.onerror = (error) => {
-      console.error('Erreur WebSocket :', error);
-    };
-
-    socket.onclose = () => {
-      console.log('Connexion WebSocket fermée');
     };
 
     function drawWheel(rotation = 0) {
@@ -160,11 +137,21 @@
       const normalized = (360 - degrees + 360) % 360;
       const segmentSize = 360 / segments;
       const index = Math.floor(normalized / segmentSize) % segments;
-      return labels[index];
+      const value = labels[index].split(" ")[0];
+
+      if (colors[index] === 'green') {
+        winSound.play();
+      } else {
+        loseSound.play();
+      }
+
+      return `${value} - WIN 🎉`;
     }
 
     function updateWinCounter(change) {
       const winElement = document.getElementById('win');
+      if (!winElement) return;
+
       const currentText = winElement.textContent;
       const matches = currentText.match(/WIN : (-?\d+) \/ 10/);
       if (!matches) return;
@@ -175,22 +162,12 @@
       if (currentWins > 10) currentWins = 10;
 
       winElement.textContent = `WIN : ${currentWins} / 10`;
-
-      if (currentWins < 0) {
-        winElement.classList.add('negative');
+      if(currentWins < 0) {
         winElement.classList.remove('positive');
+        winElement.classList.add('negative');
       } else {
         winElement.classList.remove('negative');
         winElement.classList.add('positive');
-      }
-    }
-
-    function sendWinUpdate(winCount) {
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.send(winCount.toString());
-        console.log('Envoi au serveur:', winCount);
-      } else {
-        console.warn('WebSocket non ouvert, impossible d’envoyer');
       }
     }
 
@@ -209,15 +186,15 @@
         if (t < 1) {
           requestAnimationFrame(animate);
         } else {
-          const resultLabel = getResult(currentRotation);
-          resultDiv.textContent = `${resultLabel} - WIN 🎉`;
+          const resultText = getResult(currentRotation);
+          resultDiv.textContent = resultText;
 
-          const change = parseInt(resultLabel.split(" ")[0], 10);
+          const change = parseInt(resultText.split(" ")[0], 10);
           updateWinCounter(change);
-          sendWinUpdate(change);
 
-          // Cache la roue après le spin
-          wheelContainer.style.display = 'none';
+          setTimeout(() => {
+            mainContent.style.display = 'none';
+          }, 4000);
         }
       }
 
