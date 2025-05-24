@@ -58,6 +58,16 @@
       font-weight: bold;
       color: #333;
     }
+    #win {
+      margin-top: 15px;
+      font-size: 24px;
+      font-weight: bold;
+      color: orange;
+      background: black;
+      padding: 5px 15px;
+      font-family: 'Lilita One', cursive;
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
@@ -70,7 +80,7 @@
   </div>
   <div id="result"></div>
 
-  <h1 id="win" style="background: black; font-family: 'Lilita One', cursive;">WIN : 0 / 10</h1>
+  <h1 id="win">WIN : 0 / 10</h1>
 
   <audio id="win-sound" src="victory_6.mp3"></audio>
   <audio id="lose-sound" src="fail-trombone-03.mp3"></audio>
@@ -143,15 +153,16 @@
       let currentWins = parseInt(matches[1], 10);
       currentWins += change;
 
-      winElement.textContent = `WIN : ${currentWins} / 10`;
+      if (currentWins > 10) currentWins = 10;
 
-      if (currentWins > 0) {
-        winElement.style.color = 'limegreen';
-      } else if (currentWins < 0) {
+      // Change color selon valeur
+      if (currentWins < 0) {
         winElement.style.color = 'red';
       } else {
-        winElement.style.color = 'black';
+        winElement.style.color = 'limegreen';
       }
+
+      winElement.textContent = `WIN : ${currentWins} / 10`;
     }
 
     function spin() {
@@ -174,6 +185,9 @@
 
           const change = parseInt(resultText.split(" ")[0], 10);
           updateWinCounter(change);
+
+          // Envoie la valeur au serveur via WebSocket
+          socket.send(JSON.stringify({ type: 'winUpdate', value: change }));
         }
       }
 
