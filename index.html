@@ -4,24 +4,30 @@
   <meta charset="UTF-8" />
   <title>Roue de la Fortune - WIN automatique</title>
   <style>
-    body {
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: transparent; /* fond transparent */
+      overflow: hidden;
+      font-family: Arial, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: start;
-      padding-top: 20px;
       height: 100vh;
-      background: #f0f0f0;
-      font-family: Arial, sans-serif;
+      color: #0044cc; /* bleu pour le texte */
     }
-    .logo {
-      max-width: 180px;
-      margin-bottom: 10px;
+    h1 {
+      margin-top: 20px;
+      font-size: 28px;
+      color: #0044cc; /* texte bleu */
+      user-select: none;
     }
     canvas {
-      border: none; /* bordure supprimée pour transparence */
+      border: none; /* pas de bordure */
       border-radius: 50%;
       background: transparent; /* fond transparent */
+      margin-top: 10px;
     }
     .pointer {
       width: 0;
@@ -30,6 +36,7 @@
       border-right: 20px solid transparent;
       border-bottom: 30px solid black;
       margin-bottom: -20px;
+      user-select: none;
     }
     .button-container {
       margin-top: 20px;
@@ -37,6 +44,7 @@
       background-color: #E3F2FD;
       padding: 15px 30px;
       border-radius: 10px;
+      user-select: none;
     }
     button {
       font-size: 16px;
@@ -46,11 +54,14 @@
       color: white;
       border: none;
       border-radius: 5px;
+      user-select: none;
     }
-    h1 {
-      font-size: 28px;
-      color: #0000FF; /* texte en bleu */
-      margin-bottom: 20px;
+    #result {
+      margin-top: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+      user-select: none;
     }
     #win {
       margin-top: 20px;
@@ -61,6 +72,7 @@
       background-color: black;
       color: #00ff00;
       font-family: 'Lilita One', cursive;
+      user-select: none;
     }
     #win.negative {
       color: #ff0000;
@@ -68,7 +80,6 @@
   </style>
 </head>
 <body>
-  <img src="logo.png" alt="Logo Ingency Live" class="logo" />
   <h1>🎯 Roue de la Fortune 🎯</h1>
   <div class="pointer"></div>
   <canvas id="wheel" width="300" height="300"></canvas>
@@ -89,21 +100,18 @@
     const labels = ['+1 WIN', '-1 WIN', '+2 WIN', '-2 WIN', '+3 WIN', '-3 WIN'];
     let currentRotation = 0;
 
-    // Connexion WebSocket au serveur local
+    // WebSocket connection
     const socket = new WebSocket('ws://localhost:3000');
 
     socket.onopen = () => {
       console.log('Connexion WebSocket ouverte');
     };
-
     socket.onmessage = (event) => {
       console.log('Message reçu du serveur :', event.data);
     };
-
     socket.onerror = (error) => {
       console.error('Erreur WebSocket :', error);
     };
-
     socket.onclose = () => {
       console.log('Connexion WebSocket fermée');
     };
