@@ -66,8 +66,6 @@
       border-radius: 5px;
       background-color: black;
       font-family: 'Lilita One', cursive;
-    }
-    #win.positive {
       color: #00ff00;
     }
     #win.negative {
@@ -158,14 +156,13 @@
       let currentWins = parseInt(matches[1], 10);
       currentWins += change;
 
-      // Limite max 10 mais pas de limite basse
       if (currentWins > 10) currentWins = 10;
 
       winElement.textContent = `WIN : ${currentWins} / 10`;
-      // Change la couleur selon positif ou negatif
-      if(currentWins < 0) {
-        winElement.classList.remove('positive');
+
+      if (currentWins < 0) {
         winElement.classList.add('negative');
+        winElement.classList.remove('positive');
       } else {
         winElement.classList.remove('negative');
         winElement.classList.add('positive');
@@ -174,21 +171,22 @@
 
     function updateWinStream(change) {
       const token = 'thomaslebrun95_IngencyLive_CZEf4CNddHoIHGMzOCAc8SuDfvGazV';
-      const baseUrlAdd = `http://localhost:4000/proxy/win`;
-      const baseUrlRemove = `http://localhost:4000/proxy/removewin`;
+      const baseWinStreamUrl = 'https://winstream.fr'; // Remplace par l'URL correcte si besoin
 
-      let url;
+      let targetUrl;
       const absChange = Math.abs(change);
 
       if (change > 0) {
-        url = `${baseUrlAdd}?win=${absChange}&token=${encodeURIComponent(token)}`;
+        targetUrl = `${baseWinStreamUrl}/addwinv2.php?win=${absChange}&token=${encodeURIComponent(token)}`;
       } else if (change < 0) {
-        url = `${baseUrlRemove}?win=${absChange}&token=${encodeURIComponent(token)}`;
+        targetUrl = `${baseWinStreamUrl}/removewinv2.php?win=${absChange}&token=${encodeURIComponent(token)}`;
       } else {
-        return; // Pas de changement
+        return;
       }
 
-      fetch(url)
+      const proxyUrl = `http://localhost:4000/proxy?url=${encodeURIComponent(targetUrl)}`;
+
+      fetch(proxyUrl)
         .then(response => response.text())
         .then(data => {
           console.log('WinStream mis à jour:', data);
@@ -218,7 +216,7 @@
 
           const change = parseInt(resultText.split(" ")[0], 10);
           updateWinCounter(change);
-          updateWinStream(change);  // Envoi à WinStream via proxy
+          updateWinStream(change);
         }
       }
 
@@ -227,7 +225,6 @@
 
     drawWheel();
 
-    // WebSocket connection to listen for spin trigger
     const socket = new WebSocket('ws://localhost:3000');
 
     socket.onopen = () => {
