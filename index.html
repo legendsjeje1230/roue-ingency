@@ -60,13 +60,18 @@
     }
     #win {
       margin-top: 20px;
-      font-family: 'Lilita One', cursive;
-      font-size: 24px;
-      background: black;
-      color: green;
-      padding: 5px 10px;
+      font-size: 22px;
+      font-weight: bold;
+      padding: 8px 12px;
       border-radius: 5px;
-      user-select: none;
+      background-color: black;
+      font-family: 'Lilita One', cursive;
+    }
+    #win.positive {
+      color: #00ff00;
+    }
+    #win.negative {
+      color: #ff0000;
     }
   </style>
 </head>
@@ -80,7 +85,7 @@
   </div>
   <div id="result"></div>
 
-  <h1 id="win">WIN : 0 / 10</h1>
+  <h1 id="win" class="positive">WIN : 0 / 10</h1>
 
   <audio id="win-sound" src="victory_6.mp3"></audio>
   <audio id="lose-sound" src="fail-trombone-03.mp3"></audio>
@@ -153,11 +158,44 @@
       let currentWins = parseInt(matches[1], 10);
       currentWins += change;
 
-      // Limite haute à 10 mais pas de limite basse
+      // Limite max 10 mais pas de limite basse
       if (currentWins > 10) currentWins = 10;
 
       winElement.textContent = `WIN : ${currentWins} / 10`;
-      winElement.style.color = currentWins < 0 ? 'red' : 'limegreen';
+      // Change la couleur selon positif ou negatif
+      if(currentWins < 0) {
+        winElement.classList.remove('positive');
+        winElement.classList.add('negative');
+      } else {
+        winElement.classList.remove('negative');
+        winElement.classList.add('positive');
+      }
+    }
+
+    function updateWinStream(change) {
+      const token = 'thomaslebrun95_IngencyLive_CZEf4CNddHoIHGMzOCAc8SuDfvGazV';
+      const baseUrlAdd = `http://localhost:3000/proxy/win`;
+      const baseUrlRemove = `http://localhost:3000/proxy/removewin`;
+
+      let url;
+      const absChange = Math.abs(change);
+
+      if (change > 0) {
+        url = `${baseUrlAdd}?win=${absChange}&token=${encodeURIComponent(token)}`;
+      } else if (change < 0) {
+        url = `${baseUrlRemove}?win=${absChange}&token=${encodeURIComponent(token)}`;
+      } else {
+        return; // Pas de changement
+      }
+
+      fetch(url)
+        .then(response => response.text())
+        .then(data => {
+          console.log('WinStream mis à jour:', data);
+        })
+        .catch(error => {
+          console.error('Erreur mise à jour WinStream:', error);
+        });
     }
 
     function spin() {
@@ -180,6 +218,7 @@
 
           const change = parseInt(resultText.split(" ")[0], 10);
           updateWinCounter(change);
+          updateWinStream(change);  // Envoi à WinStream via proxy
         }
       }
 
