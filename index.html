@@ -178,6 +178,9 @@
     const startTime = performance.now();
     const resultDiv = document.getElementById('result');
 
+    const winSound = document.getElementById('win-sound');
+    const loseSound = document.getElementById('lose-sound');
+
     function animate(time) {
       const elapsed = time - startTime;
       const t = Math.min(elapsed / duration, 1);
@@ -193,6 +196,14 @@
         const change = parseInt(resultLabel.split(" ")[0], 10);
         updateWinCounter(change);
         sendWinUpdate(change);
+
+        // Jouer le son selon la couleur
+        const index = labels.indexOf(resultLabel);
+        if (colors[index] === 'green') {
+          winSound.play();
+        } else {
+          loseSound.play();
+        }
       }
     }
 
