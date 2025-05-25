@@ -4,6 +4,13 @@
   <meta charset="UTF-8" />
   <title>Roue de la Fortune - WIN automatique</title>
   <style>
+    html, body {
+      margin: 0; padding: 0;
+      height: 100%;
+      background: transparent !important; /* fond transparent */
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
     body {
       display: flex;
       flex-direction: column;
@@ -11,17 +18,15 @@
       justify-content: start;
       padding-top: 20px;
       height: 100vh;
-      background: transparent;
-      font-family: Arial, sans-serif;
-      margin: 0;
     }
     .logo {
       max-width: 180px;
       margin-bottom: 10px;
     }
     canvas {
+      border: none; /* pas de bordure */
       border-radius: 50%;
-      background: transparent;
+      background: transparent !important; /* fond transparent */
       display: block;
     }
     .pointer {
@@ -65,7 +70,7 @@
 </head>
 <body>
   <img src="logo.png" alt="Logo Ingency Live" class="logo" />
-  <h1>🎯 Roue de la Fortune 🎯</h1>
+  <h1 style="color: blue;">🎯 Roue de la Fortune 🎯</h1>
   <div class="pointer"></div>
   <canvas id="wheel" width="300" height="300"></canvas>
   <div class="button-container">
@@ -78,102 +83,102 @@
   <audio id="lose-sound" src="fail-trombone-03.mp3"></audio>
 
   <script>
-  const canvas = document.getElementById('wheel');
-  const ctx = canvas.getContext('2d');
-  const segments = 6;
-  const colors = ['green', 'red', 'green', 'red', 'green', 'red'];
-  const labels = ['+1 WIN', '-1 WIN', '+2 WIN', '-2 WIN', '+3 WIN', '-3 WIN'];
-  let currentRotation = 0;
+    const canvas = document.getElementById('wheel');
+    const ctx = canvas.getContext('2d');
+    const segments = 6;
+    const colors = ['green', 'red', 'green', 'red', 'green', 'red'];
+    const labels = ['+1 WIN', '-1 WIN', '+2 WIN', '-2 WIN', '+3 WIN', '-3 WIN'];
+    let currentRotation = 0;
 
-  const socket = new WebSocket('ws://localhost:3000');
+    // Connexion WebSocket au serveur local
+    const socket = new WebSocket('ws://localhost:3000');
 
-  socket.onopen = () => {
-    console.log('Connexion WebSocket ouverte');
-  };
+    socket.onopen = () => {
+      console.log('Connexion WebSocket ouverte');
+    };
 
-  socket.onmessage = (event) => {
-    console.log('Message reçu du serveur :', event.data);
-  };
+    socket.onmessage = (event) => {
+      console.log('Message reçu du serveur :', event.data);
+    };
 
-  socket.onerror = (error) => {
-    console.error('Erreur WebSocket :', error);
-  };
+    socket.onerror = (error) => {
+      console.error('Erreur WebSocket :', error);
+    };
 
-  socket.onclose = () => {
-    console.log('Connexion WebSocket fermée');
-  };
+    socket.onclose = () => {
+      console.log('Connexion WebSocket fermée');
+    };
 
-  function drawWheel(rotation = 0) {
-    const radius = canvas.width / 2;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function drawWheel(rotation = 0) {
+      const radius = canvas.width / 2;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    for (let i = 0; i < segments; i++) {
-      const startAngle = rotation + (i * 2 * Math.PI / segments);
-      const endAngle = rotation + ((i + 1) * 2 * Math.PI / segments);
+      for (let i = 0; i < segments; i++) {
+        const startAngle = rotation + (i * 2 * Math.PI / segments);
+        const endAngle = rotation + ((i + 1) * 2 * Math.PI / segments);
 
-      ctx.beginPath();
-      ctx.moveTo(radius, radius);
-      ctx.arc(radius, radius, radius, startAngle, endAngle);
-      ctx.fillStyle = colors[i];
-      ctx.fill();
-      ctx.strokeStyle = "#333";
-      ctx.lineWidth = 1;
-      ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(radius, radius);
+        ctx.arc(radius, radius, radius, startAngle, endAngle);
+        ctx.fillStyle = colors[i];
+        ctx.fill();
+        ctx.strokeStyle = "#333";
+        ctx.lineWidth = 1;
+        ctx.stroke();
 
-      const midAngle = (startAngle + endAngle) / 2;
-      const textRadius = radius * 0.6;
-      const x = radius + Math.cos(midAngle) * textRadius;
-      const y = radius + Math.sin(midAngle) * textRadius;
+        const midAngle = (startAngle + endAngle) / 2;
+        const textRadius = radius * 0.6;
+        const x = radius + Math.cos(midAngle) * textRadius;
+        const y = radius + Math.sin(midAngle) * textRadius;
 
-      ctx.fillStyle = "white";
-      ctx.font = "bold 14px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(labels[i], x, y);
+        ctx.fillStyle = "white";
+        ctx.font = "bold 14px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(labels[i], x, y);
+      }
     }
-  }
 
-  function getResult(rotationAngle) {
-    const degrees = (rotationAngle * 180 / Math.PI + 90) % 360;
-    const normalized = (360 - degrees + 360) % 360;
-    const segmentSize = 360 / segments;
-    const index = Math.floor(normalized / segmentSize) % segments;
-    return labels[index];
-  }
-
-  function updateWinCounter(change) {
-    const winElement = document.getElementById('win');
-    const currentText = winElement.textContent;
-    const matches = currentText.match(/WIN : (-?\d+) \/ 10/);
-    if (!matches) return;
-
-    let currentWins = parseInt(matches[1], 10);
-    currentWins += change;
-
-    if (currentWins > 10) currentWins = 10;
-
-    winElement.textContent = `WIN : ${currentWins} / 10`;
-
-    if (currentWins < 0) {
-      winElement.classList.add('negative');
-      winElement.classList.remove('positive');
-    } else {
-      winElement.classList.remove('negative');
-      winElement.classList.add('positive');
+    function getResult(rotationAngle) {
+      const degrees = (rotationAngle * 180 / Math.PI + 90) % 360;
+      const normalized = (360 - degrees + 360) % 360;
+      const segmentSize = 360 / segments;
+      const index = Math.floor(normalized / segmentSize) % segments;
+      return labels[index];
     }
-  }
 
-  function sendWinUpdate(winCount) {
-    if (socket.readyState === WebSocket.OPEN) {
-      socket.send(winCount.toString());
-      console.log('Envoi au serveur:', winCount);
-    } else {
-      console.warn('WebSocket non ouvert, impossible d’envoyer');
+    function updateWinCounter(change) {
+      const winElement = document.getElementById('win');
+      const currentText = winElement.textContent;
+      const matches = currentText.match(/WIN : (-?\d+) \/ 10/);
+      if (!matches) return;
+
+      let currentWins = parseInt(matches[1], 10);
+      currentWins += change;
+
+      if (currentWins > 10) currentWins = 10;
+
+      winElement.textContent = `WIN : ${currentWins} / 10`;
+
+      if (currentWins < 0) {
+        winElement.classList.add('negative');
+        winElement.classList.remove('positive');
+      } else {
+        winElement.classList.remove('negative');
+        winElement.classList.add('positive');
+      }
     }
-  }
 
-  function spin() {
-      // Sans son de rotation, juste la roue qui tourne visuellement
+    function sendWinUpdate(winCount) {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(winCount.toString());
+        console.log('Envoi au serveur:', winCount);
+      } else {
+        console.warn('WebSocket non ouvert, impossible d’envoyer');
+      }
+    }
+
+    function spin() {
       const spinAngle = Math.random() * Math.PI * 6 + Math.PI * 2;
       const duration = 3000;
       const startTime = performance.now();
@@ -193,19 +198,14 @@
 
           const change = parseInt(resultLabel.split(" ")[0], 10);
           updateWinCounter(change);
-
-          if (colors[Math.floor(((360 - ((currentRotation * 180 / Math.PI + 90) % 360)) / (360 / segments)) % segments)] === 'green') {
-            winSound.play();
-          } else {
-            loseSound.play();
-          }
+          sendWinUpdate(change);
         }
       }
 
       requestAnimationFrame(animate);
     }
 
-  drawWheel();
+    drawWheel();
   </script>
 </body>
 </html>
