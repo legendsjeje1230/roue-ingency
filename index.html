@@ -22,19 +22,11 @@
       color: #007BFF; /* bleu */
       margin-bottom: 20px;
     }
-    .wheel-container {
-      border: 5px solid #007BFF; /* cadre bleu */
-      border-radius: 50%;
-      display: inline-block;
-      padding: 0; /* pas de padding */
-      margin-bottom: 20px;
-      background: transparent;
-    }
     canvas {
       background: transparent; /* fond transparent */
       border-radius: 50%;
       display: block;
-      /* pas de bordure ici */
+      /* plus de bordure ici */
     }
     .pointer {
       width: 0;
@@ -43,6 +35,24 @@
       border-right: 20px solid transparent;
       border-bottom: 30px solid black;
       margin-bottom: -20px;
+    }
+    .button-container {
+      border: 5px solid #007BFF; /* cadre bleu uniquement ici */
+      background-color: #E3F2FD;
+      padding: 10px 30px;
+      border-radius: 10px;
+      margin-top: 20px;
+      cursor: pointer;
+      display: inline-block;
+    }
+    button {
+      font-size: 16px;
+      padding: 10px 20px;
+      cursor: pointer;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
     }
     #win {
       margin-top: 20px;
@@ -63,12 +73,12 @@
   <img src="logo.png" alt="Logo Ingency Live" class="logo" />
   <h1>🎯 Roue de la Fortune 🎯</h1>
   <div class="pointer"></div>
-  <div class="wheel-container">
-    <canvas id="wheel" width="300" height="300"></canvas>
-  </div>
+  <canvas id="wheel" width="300" height="300"></canvas>
+
   <div class="button-container">
     <button onclick="spin()">Tourner la roue</button>
   </div>
+
   <div id="result"></div>
   <h1 id="win" class="positive">WIN : 0 / 10</h1>
 
@@ -147,7 +157,6 @@
     }
 
     function spin() {
-      // Sans son de rotation, juste la roue qui tourne visuellement
       const spinAngle = Math.random() * Math.PI * 6 + Math.PI * 2;
       const duration = 3000;
       const startTime = performance.now();
