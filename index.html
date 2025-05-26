@@ -90,6 +90,9 @@
     const labels = ['+1 WIN', '-1 WIN', '+2 WIN', '-2 WIN', '+3 WIN', '-3 WIN'];
     let currentRotation = 0;
 
+    const winSound = document.getElementById('win-sound');
+    const loseSound = document.getElementById('lose-sound');
+
     // Connexion WebSocket au serveur local
     const socket = new WebSocket('ws://localhost:3000');
 
@@ -199,6 +202,18 @@
           const change = parseInt(resultLabel.split(" ")[0], 10);
           updateWinCounter(change);
           sendWinUpdate(change);
+
+          // Jouer le son selon la couleur du segment (vert = win, rouge = lose)
+          const degrees = (currentRotation * 180 / Math.PI + 90) % 360;
+          const normalized = (360 - degrees + 360) % 360;
+          const segmentSize = 360 / segments;
+          const index = Math.floor(normalized / segmentSize) % segments;
+
+          if (colors[index] === 'green') {
+            winSound.play();
+          } else {
+            loseSound.play();
+          }
         }
       }
 
