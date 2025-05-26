@@ -1,76 +1,82 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Roue de la Fortune - WIN automatique</title>
-  <style>
-    html, body {
-      margin: 0; padding: 0;
-      height: 100%;
-      background: transparent !important; /* fond transparent */
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-    }
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: start;
-      padding-top: 20px;
-      height: 100vh;
-    }
-    .logo {
-      max-width: 180px;
-      margin-bottom: 10px;
-    }
-    canvas {
-      border: none; /* pas de bordure */
-      border-radius: 50%;
-      background: transparent !important; /* fond transparent */
-      display: block;
-    }
-    .pointer {
-      width: 0;
-      height: 0;
-      border-left: 20px solid transparent;
-      border-right: 20px solid transparent;
-      border-bottom: 30px solid black;
-      margin-bottom: -20px;
-    }
-    .button-container {
-      margin-top: 20px;
-      border: 3px solid #007BFF;
-      background-color: #E3F2FD;
-      padding: 15px 30px;
-      border-radius: 10px;
-    }
-    button {
-      font-size: 16px;
-      padding: 10px 20px;
-      cursor: pointer;
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 5px;
-    }
-    #win {
-      margin-top: 20px;
-      font-size: 22px;
-      font-weight: bold;
-      padding: 8px 12px;
-      border-radius: 5px;
-      background-color: black;
-      color: #00ff00;
-      font-family: 'Lilita One', cursive;
-    }
-    #win.negative {
-      color: #ff0000;
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Roue de la Fortune - WIN automatique</title>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+    padding-top: 20px;
+    height: 100vh;
+    background: #f0f0f0;
+    font-family: Arial, sans-serif;
+  }
+  .logo {
+    max-width: 180px;
+    margin-bottom: 10px;
+  }
+  h1.title {
+    font-size: 28px;
+    color: #003366;
+    margin-bottom: 20px;
+  }
+  canvas {
+    border-radius: 50%;
+    background: transparent;
+  }
+  .pointer {
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-bottom: 30px solid black;
+    margin-bottom: -20px;
+  }
+  .button-container {
+    margin-top: 20px;
+    border: 3px solid #007BFF;
+    background-color: #E3F2FD;
+    padding: 15px 30px;
+    border-radius: 10px;
+  }
+  button {
+    font-size: 16px;
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+  }
+  #result {
+    margin-top: 15px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+  }
+  #win {
+    margin-top: 20px;
+    font-size: 22px;
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: 5px;
+    background-color: black;
+    font-family: 'Lilita One', cursive;
+  }
+  #win.positive {
+    color: #00ff00;
+  }
+  #win.negative {
+    color: #ff0000;
+  }
+</style>
 </head>
 <body>
   <img src="logo.png" alt="Logo Ingency Live" class="logo" />
-  <h1 style="color: blue;">🎯 Roue de la Fortune 🎯</h1>
+  <h1 class="title">🎯 Roue de la Fortune 🎯</h1>
   <div class="pointer"></div>
   <canvas id="wheel" width="300" height="300"></canvas>
   <div class="button-container">
@@ -90,24 +96,8 @@
     const labels = ['+1 WIN', '-1 WIN', '+2 WIN', '-2 WIN', '+3 WIN', '-3 WIN'];
     let currentRotation = 0;
 
-    // Connexion WebSocket au serveur local
-    const socket = new WebSocket('ws://localhost:3000');
-
-    socket.onopen = () => {
-      console.log('Connexion WebSocket ouverte');
-    };
-
-    socket.onmessage = (event) => {
-      console.log('Message reçu du serveur :', event.data);
-    };
-
-    socket.onerror = (error) => {
-      console.error('Erreur WebSocket :', error);
-    };
-
-    socket.onclose = () => {
-      console.log('Connexion WebSocket fermée');
-    };
+    const winSound = document.getElementById('win-sound');
+    const loseSound = document.getElementById('lose-sound');
 
     function drawWheel(rotation = 0) {
       const radius = canvas.width / 2;
@@ -144,6 +134,13 @@
       const normalized = (360 - degrees + 360) % 360;
       const segmentSize = 360 / segments;
       const index = Math.floor(normalized / segmentSize) % segments;
+
+      if (colors[index] === 'green') {
+        winSound.play();
+      } else {
+        loseSound.play();
+      }
+
       return labels[index];
     }
 
@@ -157,6 +154,7 @@
       currentWins += change;
 
       if (currentWins > 10) currentWins = 10;
+      if (currentWins < -10) currentWins = -10;
 
       winElement.textContent = `WIN : ${currentWins} / 10`;
 
@@ -169,54 +167,50 @@
       }
     }
 
-    function sendWinUpdate(winCount) {
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.send(winCount.toString());
-        console.log('Envoi au serveur:', winCount);
-      } else {
-        console.warn('WebSocket non ouvert, impossible d’envoyer');
-      }
-    }
-
     function spin() {
-  const spinAngle = Math.random() * Math.PI * 6 + Math.PI * 2;
-  const duration = 3000;
-  const startTime = performance.now();
-  const resultDiv = document.getElementById('result');
+      const spinAngle = Math.random() * Math.PI * 6 + Math.PI * 2;
+      const duration = 4000;
+      const startTime = performance.now();
+      const resultDiv = document.getElementById('result');
 
-  const winSound = document.getElementById('win-sound');
-  const loseSound = document.getElementById('lose-sound');
+      function animate(time) {
+        const elapsed = time - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - t, 3);
+        currentRotation = spinAngle * easeOut;
+        drawWheel(currentRotation);
+        if (t < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          const resultLabel = getResult(currentRotation);
+          resultDiv.textContent = `${resultLabel} - WIN 🎉`;
 
-  function animate(time) {
-    const elapsed = time - startTime;
-    const t = Math.min(elapsed / duration, 1);
-    const easeOut = 1 - Math.pow(1 - t, 3);
-    currentRotation = spinAngle * easeOut;
-    drawWheel(currentRotation);
-    if (t < 1) {
-      requestAnimationFrame(animate);
-    } else {
-      const resultLabel = getResult(currentRotation);
-      resultDiv.textContent = `${resultLabel} - WIN 🎉`;
-
-      // Joue le son selon la couleur de la section (vert = win, rouge = lose)
-      const index = labels.indexOf(resultLabel);
-      if (colors[index] === 'green') {
-        winSound.play();
-      } else {
-        loseSound.play();
+          const change = parseInt(resultLabel.split(" ")[0], 10);
+          updateWinCounter(change);
+        }
       }
 
-      const change = parseInt(resultLabel.split(" ")[0], 10);
-      updateWinCounter(change);
-      sendWinUpdate(change);
+      requestAnimationFrame(animate);
     }
-  }
-
-  requestAnimationFrame(animate);
-}
 
     drawWheel();
+
+    // WebSocket connection
+    const socket = new WebSocket('ws://localhost:3000');
+
+    socket.onopen = () => {
+      console.log('WebSocket connecté au serveur');
+    };
+
+    socket.onmessage = event => {
+      if (event.data === 'spin') {
+        spin();
+      }
+    };
+
+    socket.onerror = error => {
+      console.error('WebSocket erreur:', error);
+    };
   </script>
 </body>
 </html>
